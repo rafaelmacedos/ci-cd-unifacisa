@@ -12,34 +12,39 @@ Aplicação web desenvolvida em **Next.js** que apresenta a história completa d
 - **TypeScript** - Tipagem estática
 - **Tailwind CSS** - Estilização
 - **React 19** - Biblioteca de interface
+- **Docker** - Containerização
+- **Terraform** - Infraestrutura como código
+- **Nginx** - Proxy reverso
 
 ## 📦 Como Executar
 
+### Desenvolvimento Local
 ```bash
-# Instalar dependências
 npm install
-
-# Executar em desenvolvimento
 npm run dev
-
-# Build para produção
-npm run build
-
-# Executar em produção
-npm start
 ```
+
+### Produção com Docker + Terraform
+```bash
+cd terraform
+terraform init
+terraform apply
+# Acesse: http://localhost:8000
+```
+
+## 🐳 Infraestrutura
+
+- **Next.js App**: Porta 3001 (redireciona para 8000)
+- **Nginx Proxy**: Porta 8000 (recomendado)
+- **Auto-redirect**: Porta 3001 → 8000
 
 ## 🔄 GitHub Actions
 
-O projeto utiliza **GitHub Actions** para automação de CI/CD:
-
-- **Trigger**: Executa em `pull_request`, `push` e `workflow_dispatch`
+- **Trigger**: `pull_request`, `push`, `workflow_dispatch`
 - **Node.js 20**: Ambiente de execução
 - **Cache npm**: Otimização de dependências
 - **Lint**: Verificação de código com ESLint
 - **Build**: Teste de build do Next.js
-
-O workflow garante que o código esteja sempre funcional antes de ser integrado ao repositório principal.
 
 ## 🎯 Funcionalidades
 
@@ -48,5 +53,6 @@ O workflow garante que o código esteja sempre funcional antes de ser integrado 
 - 🎨 **Interface intuitiva** com cores da Unifacisa
 - 📊 **Timeline interativa** da história do curso
 - 📈 **Estatísticas** e diferenciais destacados
+- 🔄 **Redirecionamento automático** para nginx
 
 *🙈 Made by the boys 🐒*
