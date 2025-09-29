@@ -105,7 +105,7 @@ jobs:
 
       - name: Deploy to EC2 using deploy.sh
         run: |
-          ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
+          ssh ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
             echo "🚀 Iniciando deploy automático..."
             
             # Baixar e executar o script de deploy
