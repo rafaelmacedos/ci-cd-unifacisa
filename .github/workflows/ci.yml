@@ -106,51 +106,41 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
-            # Navegar para o diretório da aplicação
-            cd /opt/unifacisa-app || {
-              echo "Diretório da aplicação não encontrado. Criando..."
-              sudo mkdir -p /opt/unifacisa-app
-              sudo chown $USER:$USER /opt/unifacisa-app
-            }
+            # Criar diretório da aplicação se não existir
+            echo "Preparando diretório da aplicação..."
+            sudo mkdir -p /opt/unifacisa-app
+            sudo chown $USER:$USER /opt/unifacisa-app
             
-            # Parar aplicação atual
+            # Navegar para o diretório
+            cd /opt/unifacisa-app
+            
+            # Parar aplicação atual se estiver rodando
             echo "Parando aplicação atual..."
             docker-compose down 2>/dev/null || true
             
-            # Fazer backup da versão atual
-            echo "Fazendo backup da versão atual..."
-            if [ -d ".git" ]; then
-              git stash push -m "Backup before deploy $(date)"
-            fi
+            # Limpar diretório se necessário
+            echo "Limpando diretório..."
+            rm -rf * .* 2>/dev/null || true
             
-            # Atualizar código
-            echo "Atualizando código..."
-            if [ -d ".git" ]; then
-              git fetch origin
-              git reset --hard origin/main
-            else
-              echo "Clonando repositório..."
-              git clone https://github.com/${{ github.repository }}.git .
-            fi
+            # Clonar repositório
+            echo "Clonando repositório..."
+            git clone https://github.com/${{ github.repository }}.git .
             
-            # Tornar scripts executáveis
-            chmod +x deploy.sh manage.sh 2>/dev/null || true
+            # Verificar se o clone foi bem-sucedido
+            if [ ! -f "package.json" ]; then
+              echo "❌ Erro: package.json não encontrado após clone"
+              exit 1
+            fi
             
             # Fazer deploy
-            echo "Iniciando deploy..."
-            if [ -f "deploy.sh" ]; then
-              ./deploy.sh
-            else
-              # Deploy manual se não houver script
-              echo "Fazendo deploy manual..."
-              npm ci --legacy-peer-deps
-              npm run build
-              docker-compose up -d --build
-            fi
+            echo "Fazendo deploy..."
+            npm install --legacy-peer-deps
+            npm run build
+            docker-compose up -d --build
             
             # Verificar se a aplicação está rodando
             echo "Verificando status da aplicação..."
-            sleep 10
+            sleep 15
             docker-compose ps
             
             # Testar aplicação
