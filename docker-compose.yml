@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Aplicação Next.js
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: unifacisa-nextjs-app
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network
+
+  # Nginx como proxy reverso
+  nginx:
+    image: nginx:alpine
+    container_name: unifacisa-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
