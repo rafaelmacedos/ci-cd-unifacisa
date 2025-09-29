@@ -124,12 +124,12 @@ jobs:
             sleep 10
             
             cd /opt/unifacisa-app
-            if docker-compose ps | grep -q "Up"; then
+            if sudo docker-compose ps | grep -q "Up"; then
               echo "✅ Deploy realizado com sucesso!"
               echo "🌐 Aplicação disponível na porta 8000 na instância EC2"
             else
               echo "❌ Erro no deploy. Verificando logs..."
-              docker-compose logs --tail=20
+              sudo docker-compose logs --tail=20
               exit 1
             fi
           EOF

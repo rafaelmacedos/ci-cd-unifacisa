@@ -95,18 +95,28 @@ else
 fi
 
 # 8. Verificar arquivos necessários
+log "Verificando arquivos necessários..."
+ls -la
 if [ ! -f "package.json" ] || [ ! -f "Dockerfile" ] || [ ! -f "docker-compose.yml" ]; then
-    error "Arquivos necessários não encontrados"
+    error "Arquivos necessários não encontrados. Arquivos presentes:"
+    ls -la
 fi
+log "Todos os arquivos necessários encontrados"
 
 # 9. Parar containers existentes
 log "Parando containers existentes..."
 cd /opt/unifacisa-app
-docker-compose down || true
+log "Diretório atual: $(pwd)"
+log "Arquivos no diretório:"
+ls -la
+sudo docker-compose -f /opt/unifacisa-app/docker-compose.yml down || true
 
 # 10. Construir e iniciar containers
 log "Construindo e iniciando containers..."
-docker-compose up --build -d
+if [ ! -f "docker-compose.yml" ]; then
+    error "docker-compose.yml não encontrado em $(pwd)"
+fi
+sudo docker-compose -f /opt/unifacisa-app/docker-compose.yml up --build -d
 
 # 11. Aguardar aplicação subir
 log "Aguardando aplicação..."
@@ -114,7 +124,7 @@ sleep 20
 
 # 12. Verificar se está funcionando
 cd /opt/unifacisa-app
-if docker-compose ps | grep -q "Up"; then
+if sudo docker-compose -f /opt/unifacisa-app/docker-compose.yml ps | grep -q "Up"; then
     PUBLIC_IP=$(wget -qO- http://169.254.169.254/latest/meta-data/public-ipv4)
     
     echo -e "${GREEN}"
@@ -131,7 +141,7 @@ if docker-compose ps | grep -q "Up"; then
     warning "IMPORTANTE: Verifique se o Security Group da EC2 permite tráfego na porta 8000"
     
 else
-    error "❌ Falha no deploy. Verifique os logs: docker-compose logs"
+    error "❌ Falha no deploy. Verifique os logs: sudo docker-compose logs"
 fi
 
 # 13. Criar script de monitoramento
@@ -140,11 +150,11 @@ cat > /opt/unifacisa-app/monitor.sh << 'EOF'
 #!/bin/bash
 cd /opt/unifacisa-app
 echo "=== Status dos Containers ==="
-docker-compose ps
+sudo docker-compose ps
 echo -e "\n=== Uso de Recursos ==="
-docker stats --no-stream
+sudo docker stats --no-stream
 echo -e "\n=== Logs Recentes ==="
-docker-compose logs --tail=10
+sudo docker-compose logs --tail=10
 echo -e "\n=== IP Público ==="
 wget -qO- http://169.254.169.254/latest/meta-data/public-ipv4
 EOF
@@ -164,8 +174,8 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/opt/unifacisa-app
-ExecStart=/usr/local/bin/docker-compose up -d
-ExecStop=/usr/local/bin/docker-compose down
+ExecStart=/usr/local/bin/docker-compose -f /opt/unifacisa-app/docker-compose.yml up -d
+ExecStop=/usr/local/bin/docker-compose -f /opt/unifacisa-app/docker-compose.yml down
 TimeoutStartSec=0
 User=ec2-user
 Group=ec2-user
