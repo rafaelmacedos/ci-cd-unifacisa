@@ -134,8 +134,6 @@ jobs:
             
             # Fazer deploy
             echo "Fazendo deploy..."
-            npm install --legacy-peer-deps
-            npm run build
             docker-compose up -d --build
             
             # Verificar se a aplicação está rodando
