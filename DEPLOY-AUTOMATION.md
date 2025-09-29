@@ -1,167 +1,82 @@
-# 🚀 Deploy Automático - GitHub Actions + AWS EC2
+# 🚀 Deploy Automation - Script deploy.sh
 
-## ✅ O que foi implementado
+O deploy automático é executado pelo script `deploy.sh` que é baixado e executado automaticamente pelo GitHub Actions.
 
-### 🔄 GitHub Actions Pipeline Completo
-1. **Test** - Executa testes e coverage
-2. **Build** - Verifica lint e build
-3. **Docker** - Build e push da imagem para DockerHub
-4. **Deploy** - Deploy automático para AWS EC2 (apenas na branch main)
+## 📋 Pré-requisitos da EC2
 
-### 🎯 Etapa de Deploy
-- **Trigger**: Apenas em push para branch `main`
-- **Dependências**: Executa após test, build e docker
-- **SSH**: Conecta na instância EC2 via SSH
-- **Backup**: Faz backup da versão atual
-- **Update**: Atualiza código via git
-- **Deploy**: Executa deploy automático
-- **Verification**: Testa se aplicação está funcionando
+- **Amazon Linux 2023** (recomendado) ou Ubuntu 20.04+
+- **Portas liberadas**: 22 (SSH) e 8000 (HTTP) no Security Group
+- **Usuário**: `ec2-user` (Amazon Linux) ou `ubuntu` (Ubuntu)
+- **Acesso SSH** configurado com a chave privada
 
-## 📋 Arquivos Criados/Modificados
+## 🔄 Como Funciona o Deploy
 
-### ✅ Modificados
-- **`.github/workflows/ci.yml`** - Adicionada etapa de deploy
-- **`README.md`** - Documentação do deploy automático
+### 1. Deploy Automático (CI Pipeline)
+- **Push para `main`** → Executa deploy completo automaticamente
+- **Pull Request** → Apenas testes (sem deploy)
 
-### ✅ Criados
-- **`GITHUB-SECRETS.md`** - Guia de configuração dos secrets
-- **`prepare-ec2.sh`** - Script de preparação da instância EC2
+### 2. Deploy Manual (Manual Deploy)
+- **Workflow separado** → Execute manualmente quando quiser
+- **Características**:
+  - **Sempre executa testes** (obrigatório)
+  - Deploy direto para produção
+  - Usa tag `latest` do Docker
 
-## 🔐 Secrets Necessários
-
-Configure estes secrets no GitHub (Settings → Secrets and variables → Actions):
-
-1. **DOCKERHUB_USERNAME** (já existente)
-2. **DOCKERHUB_TOKEN** (já existente)
-3. **AWS_SSH_PRIVATE_KEY** (novo) - Chave privada SSH
-4. **AWS_EC2_HOST** (novo) - IP da instância EC2
-5. **AWS_EC2_USER** (novo) - Usuário da instância (geralmente `ubuntu`)
-
-## 🛠️ Como Configurar
-
-### 1. Preparar Instância EC2
+### 3. Processo Automático
+O workflow baixa e executa o `deploy.sh`:
 ```bash
-# Na sua instância EC2 Ubuntu
-wget https://raw.githubusercontent.com/SEU-USUARIO/ci-cd-unifacisa/main/prepare-ec2.sh
-chmod +x prepare-ec2.sh
-./prepare-ec2.sh
+# Baixado automaticamente pelo GitHub Actions
+wget -O /tmp/deploy.sh https://raw.githubusercontent.com/rafaelmacedos/ci-cd-unifacisa/main/deploy.sh
+chmod +x /tmp/deploy.sh
+sudo /tmp/deploy.sh
 ```
 
-### 2. Configurar Secrets no GitHub
-1. Vá para Settings → Secrets and variables → Actions
-2. Adicione os 5 secrets listados acima
-3. Veja detalhes em [GITHUB-SECRETS.md](GITHUB-SECRETS.md)
+## 🛠️ O que o deploy.sh faz
 
-### 3. Testar Deploy
+### Instalação Automática
+- ✅ **Atualiza sistema** (dnf update)
+- ✅ **Instala Docker** e Docker Compose
+- ✅ **Configura swap** (se RAM < 2GB)
+- ✅ **Cria diretório** `/opt/unifacisa-app`
+- ✅ **Clona repositório** do GitHub
+
+### Deploy da Aplicação
+- ✅ **Para containers** existentes
+- ✅ **Build e inicia** novos containers
+- ✅ **Verifica funcionamento**
+- ✅ **Cria script de monitoramento**
+- ✅ **Configura auto-start** (systemd)
+
+### Resultado Final
+- 🌐 **Aplicação rodando** na porta 8000
+- 🔄 **Auto-restart** configurado
+- 📊 **Monitoramento** disponível
+
+## 🚀 Deploy Manual via GitHub Actions
+
+### Como Executar Deploy Manual
+1. **Acesse**: `https://github.com/rafaelmacedos/ci-cd-unifacisa/actions`
+2. **Clique** em "Manual Deploy" no menu lateral
+3. **Clique** em "Run workflow"
+4. **Execute** o deploy (sem configurações adicionais)
+
+### Características do Deploy Manual
+- ✅ **Testes obrigatórios** (sempre executa)
+- ✅ **Tag `latest`** da imagem Docker
+- ✅ **Deploy direto** para produção
+- ✅ **Logs detalhados** do processo
+
+### Execução Direta na EC2 (se necessário)
 ```bash
-# Faça push para a branch main
-git add .
-git commit -m "Test deploy automation"
-git push origin main
+# Conectar via SSH
+ssh -i sua-chave.pem ec2-user@SEU_IP_EC2
+
+# Baixar e executar o script
+wget -O deploy.sh https://raw.githubusercontent.com/rafaelmacedos/ci-cd-unifacisa/main/deploy.sh
+chmod +x deploy.sh
+sudo ./deploy.sh
 ```
-
-## 🔍 Como Funciona o Deploy
-
-### Fluxo Automático
-1. **Push para main** → GitHub Actions inicia
-2. **Testes passam** → Build é executado
-3. **Build passa** → Docker image é criada e enviada
-4. **Docker passa** → Deploy é executado
-5. **SSH na EC2** → Código é atualizado
-6. **Deploy local** → Aplicação é reiniciada
-7. **Verificação** → Testa se está funcionando
-
-### Comandos Executados na EC2
-```bash
-# Parar aplicação atual
-docker-compose down
-
-# Backup da versão atual
-git stash push -m "Backup before deploy"
-
-# Atualizar código
-git fetch origin
-git reset --hard origin/main
-
-# Deploy
-./deploy.sh  # ou deploy manual
-
-# Verificar status
-docker-compose ps
-curl http://localhost:8000
-```
-
-## 📊 Monitoramento
-
-### GitHub Actions
-- Vá para a aba "Actions" do repositório
-- Clique no workflow para ver logs detalhados
-- Verifique se todas as etapas passaram
-
-### Instância EC2
-```bash
-# Status da aplicação
-cd /opt/unifacisa-app
-docker-compose ps
-
-# Logs da aplicação
-docker-compose logs -f
-
-# Logs do sistema
-tail -f /var/log/unifacisa-app.log
-```
-
-## 🚨 Troubleshooting
-
-### Deploy Falha
-1. **Verifique os logs** no GitHub Actions
-2. **Verifique conectividade SSH** na instância
-3. **Verifique se Docker está rodando** na EC2
-4. **Verifique logs da aplicação** na EC2
-
-### Aplicação Não Responde
-1. **Verifique containers**: `docker-compose ps`
-2. **Verifique logs**: `docker-compose logs`
-3. **Verifique firewall**: `sudo ufw status`
-4. **Verifique porta**: `sudo netstat -tlnp | grep :8000`
-
-### Secrets Incorretos
-1. **Verifique chave SSH**: Teste conexão manual
-2. **Verifique IP**: Confirme o IP da instância
-3. **Verifique usuário**: Confirme o usuário (geralmente `ubuntu`)
-
-## 🎯 Benefícios
-
-### ✅ Automatização Completa
-- Deploy automático em push para main
-- Rollback automático em caso de falha
-- Backup automático antes do deploy
-
-### ✅ Segurança
-- Secrets protegidos no GitHub
-- SSH com chaves privadas
-- Firewall configurado
-
-### ✅ Monitoramento
-- Logs detalhados no GitHub Actions
-- Health checks automáticos
-- Monitoramento contínuo na EC2
-
-### ✅ Flexibilidade
-- Deploy manual ainda disponível
-- Rollback manual possível
-- Configuração personalizável
-
-## 🔄 Próximos Passos
-
-1. ✅ Configure os secrets no GitHub
-2. ✅ Execute o script de preparação na EC2
-3. ✅ Faça push para main para testar
-4. ✅ Monitore o deploy no GitHub Actions
-5. ✅ Acesse sua aplicação em `http://SEU-IP-EC2:8000`
 
 ---
 
-**Resultado**: Deploy completamente automatizado! 🚀
-
-Agora, sempre que você fizer push para a branch `main`, sua aplicação será automaticamente testada, construída e deployada na sua instância AWS EC2.
+*🎯 O deploy é 100% automático via GitHub Actions. O script `deploy.sh` cuida de toda a configuração.*

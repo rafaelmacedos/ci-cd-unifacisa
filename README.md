@@ -3,7 +3,6 @@
 [![CI/CD Pipeline](https://github.com/rafaelmacedos/ci-cd-unifacisa/actions/workflows/ci.yml/badge.svg)](https://github.com/rafaelmacedos/ci-cd-unifacisa/actions/workflows/ci.yml)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-blue)](https://www.docker.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![AWS](https://img.shields.io/badge/AWS-EC2-orange)](https://aws.amazon.com/)
 
 > Projeto desenvolvido para a competência **Elaborar um pipeline CI/CD para Cloud Computing** - Uma aplicação web moderna que conta a trajetória do curso de Sistemas de Informação da Unifacisa desde sua fundação.
@@ -17,7 +16,7 @@ Aplicação web desenvolvida em **Next.js** que apresenta a história completa d
 ## 📊 Status do Projeto
 
 - ✅ **Desenvolvimento**: Concluído
-- ✅ **Testes**: Implementados com Jest
+- ✅ **Testes unitários**: Implementados com Jest
 - ✅ **CI/CD**: Pipeline completo no GitHub Actions
 - ✅ **Deploy**: Automático para AWS EC2
 - ✅ **Containerização**: Docker + Docker Compose
@@ -134,11 +133,6 @@ O deploy automático é executado via GitHub Actions quando há push para a bran
 - 🔄 **CI/CD Pipeline** completo
 - 📊 **Monitoramento** e health checks
 - 🔒 **Segurança** com secrets e SSH
-
-## 📚 Documentação
-
-- **[GITHUB-SECRETS.md](GITHUB-SECRETS.md)** - Configuração dos secrets do GitHub
-- **[DEPLOY-AUTOMATION.md](DEPLOY-AUTOMATION.md)** - Guia completo de deploy automático
 
 ## 🚀 Quick Start
 
