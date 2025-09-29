@@ -84,7 +84,7 @@ jobs:
   deploy:
     name: Deploy to AWS EC2
     runs-on: ubuntu-latest
-    needs: docker
+    needs: [test, build, docker]
     steps:
       - uses: actions/checkout@v3
 
@@ -99,9 +99,9 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          ssh ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
-             echo "🚀 Iniciando deploy manual..."
-             echo "📅 Data/Hora: $(date)"
+          ssh ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} '
+            echo "🚀 Iniciando deploy manual..."
+            echo "📅 Data/Hora: $(date)"
             
             # Baixar e executar o script de deploy
             echo "Baixando script de deploy..."
@@ -118,13 +118,13 @@ jobs:
             echo "Verificando status..."
             sleep 10
             
-             cd /opt/unifacisa-app
-             if sudo docker-compose ps | grep -q "Up"; then
-               echo "✅ Deploy manual realizado com sucesso!"
-               echo "🌐 Aplicação disponível em: http://${{ secrets.AWS_EC2_HOST }}:8000"
-             else
-               echo "❌ Erro no deploy. Verificando logs..."
-               sudo docker-compose logs --tail=20
-               exit 1
-             fi
-           EOF
+            cd /opt/unifacisa-app
+            if sudo docker-compose ps | grep -q "Up"; then
+              echo "✅ Deploy manual realizado com sucesso!"
+              echo "🌐 Aplicação disponível em: http://${{ secrets.AWS_EC2_HOST }}:8000"
+            else
+              echo "❌ Erro no deploy. Verificando logs..."
+              sudo docker-compose logs --tail=20
+              exit 1
+            fi
+          '
