@@ -61,14 +61,20 @@ log "Pulando configuração de firewall (Security Group já configurado)..."
 # 5. Configurar swap se necessário
 TOTAL_RAM=$(free -m | awk 'NR==2{printf "%.0f", $2}')
 if [ "$TOTAL_RAM" -lt 2048 ]; then
-    warning "RAM: ${TOTAL_RAM}MB. Configurando swap..."
-    dd if=/dev/zero of=/swapfile bs=1024 count=2097152
-    chmod 600 /swapfile
-    mkswap /swapfile
-    swapon /swapfile
-    echo '/swapfile none swap sw 0 0' >> /etc/fstab
-    echo 'vm.swappiness=10' >> /etc/sysctl.conf
-    sysctl -p
+    warning "RAM: ${TOTAL_RAM}MB. Verificando swap..."
+    if [ ! -f /swapfile ]; then
+        warning "Criando swap..."
+        dd if=/dev/zero of=/swapfile bs=1024 count=2097152
+        chmod 600 /swapfile
+        mkswap /swapfile
+        swapon /swapfile
+        echo '/swapfile none swap sw 0 0' >> /etc/fstab
+        echo 'vm.swappiness=10' >> /etc/sysctl.conf
+        sysctl -p
+    else
+        warning "Swap já existe, ativando..."
+        swapon /swapfile 2>/dev/null || true
+    fi
 fi
 
 # 6. Criar diretório do projeto
@@ -95,6 +101,7 @@ fi
 
 # 9. Parar containers existentes
 log "Parando containers existentes..."
+cd /opt/unifacisa-app
 docker-compose down || true
 
 # 10. Construir e iniciar containers
@@ -106,6 +113,7 @@ log "Aguardando aplicação..."
 sleep 20
 
 # 12. Verificar se está funcionando
+cd /opt/unifacisa-app
 if docker-compose ps | grep -q "Up"; then
     PUBLIC_IP=$(wget -qO- http://169.254.169.254/latest/meta-data/public-ipv4)
     

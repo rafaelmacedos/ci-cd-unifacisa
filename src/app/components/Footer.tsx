@@ -152,7 +152,7 @@ export default function Footer({ className = '' }: FooterProps) {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-center md:text-left mb-4 md:mb-0">
               <p className="text-sm text-unifacisa-gray-400">
-                © {currentYear} Unifacisa - Centro Universitário. Todos os direitos reservados.
+                © {currentYear} Unifacisa - Centro Universitário 2025. Todos os direitos reservados.
               </p>
             </div>
             <div className="flex space-x-6 text-sm">
