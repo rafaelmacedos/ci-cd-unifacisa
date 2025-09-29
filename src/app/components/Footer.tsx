@@ -106,6 +106,11 @@ export default function Footer({ className = '' }: FooterProps) {
                   Cursos Técnicos
                 </a>
               </li>
+              <li>
+                <a href="#" className="text-unifacisa-gray-300 hover:text-unifacisa-accent transition-colors">
+                  Mestrado
+                </a>
+              </li>
             </ul>
           </div>
 
